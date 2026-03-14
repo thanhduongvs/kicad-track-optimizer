@@ -1,8 +1,8 @@
 from PySide6.QtWidgets import QMainWindow, QMessageBox
 from PySide6.QtCore import QTimer
 from gui import Ui_MainWindow
-from version import version
 from kicad_pcb import KiCadPCB
+from version import version
 
 IU_PER_MM = 1000000
 IU_PER_MILS = 25400
@@ -16,9 +16,9 @@ class MainWindow(QMainWindow):
         self.pcb = KiCadPCB()
 
         self.unit: int = IU_PER_MILS
-        self.ui.editWidth.setText("8.0")
-        self.ui.editGap.setText("8.0")
-        self.ui.editLength.setText("60.0")
+        self.ui.editWidth.setText("6.0")
+        self.ui.editGap.setText("7.0")
+        self.ui.editLength.setText("40.0")
         self.ui.comboMode.addItems(["Perpendicular", "0 Degrees", "22.5 Degrees", "45 Degrees", "67.5 Degrees", "90 Degrees", "-22.5 Degrees", "-45 Degrees", "-67.5 Degrees", "-90 Degrees"])
         self.ui.radioRemove.setChecked(True)
         self.ui.radioMil.setChecked(True)

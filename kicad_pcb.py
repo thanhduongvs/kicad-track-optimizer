@@ -289,7 +289,6 @@ class KiCadPCB:
                      "-67.5 Degrees", "-90 Degrees".
         """
         print(f"Processing Differential Pair Breakout (Mode: {escape_mode})...")
-        import math
         
         selected_items = self.board.get_selection()
         selected_pads = [item for item in selected_items if isinstance(item, Pad)]
