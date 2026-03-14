@@ -6,8 +6,16 @@ A powerful Python-based plugin designed to automatically clean up, optimize trac
 
 When modifying dense layouts, it is easy to leave behind microscopic unconnected stubs or accidentally draw overlapping tracks. This tool acts as an advanced geometric sweeper to clean your board instantly. Furthermore, it includes a smart breakout generator for differential pairs to ensure perfectly symmetrical and deskewed routing from IC pads.
 
-![Preview Screenshot](images/gui1.png)![Preview Screenshot](images/gui2.png)
-
+<table>
+  <tr>
+    <td width="33%" align="center" valign="top">
+      <img src="./images/gui1.png" alt="SOM RZ/V2L" width="100%" />
+    </td>
+    <td width="33%" align="center" valign="top">
+      <img src="./images/gui2.png" alt="SOM RZ/V2H" width="100%" />
+    </td>
+  </tr>
+</table>
 ## 🚀 Key Features
 
 ### 🧹 Track Optimization
