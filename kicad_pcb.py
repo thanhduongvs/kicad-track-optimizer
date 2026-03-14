@@ -280,14 +280,16 @@ class KiCadPCB:
                                 break
         print("Recursively scanning for stub tracks done")
     
-    def breakout_diff_pair(self, width_nm=250000, gap_nm=200000, escape_length=2000000, flip_direction=False) -> int:
+    def breakout_diff_pair(self, width_nm=250000, gap_nm=200000, escape_length=2000000, escape_mode="Perpendicular", flip_direction=False) -> int:
         """
-        Automates differential pair breakout. 
-        Step 1: Tracks exit pads collinearly along the line connecting the two pad centers.
-        Step 2: Tracks turn 90 degrees to escape perpendicularly.
+        Automates differential pair breakout.
+        escape_mode: Supported modes include: 
+                     "Perpendicular", "0 Degrees", "22.5 Degrees", "45 Degrees", 
+                     "67.5 Degrees", "90 Degrees", "-22.5 Degrees", "-45 Degrees", 
+                     "-67.5 Degrees", "-90 Degrees".
         """
-        print("Processing Collinear Differential Pair Breakout...")
-        
+        print(f"Processing Differential Pair Breakout (Mode: {escape_mode})...")
+        import math
         
         selected_items = self.board.get_selection()
         selected_pads = [item for item in selected_items if isinstance(item, Pad)]
@@ -302,7 +304,7 @@ class KiCadPCB:
         x1, y1 = pad1.position.x, pad1.position.y
         x2, y2 = pad2.position.x, pad2.position.y
         
-        # 1. Calculate the vector from Pad 1 to Pad 2
+        # 1. Calculate the vector connecting the centers of the 2 pads
         vx = x2 - x1
         vy = y2 - y1
         dist = math.hypot(vx, vy)
@@ -311,39 +313,65 @@ class KiCadPCB:
             print("Error: Pads have identical coordinates.")
             return 0
             
-        # Unit vector pointing from Pad 1 to Pad 2
+        # Unit vectors ux, uy
         ux = vx / dist
         uy = vy / dist
         
-        # Midpoint between the two pads
+        # Midpoint coordinates of the 2 pads
         mx = (x1 + x2) / 2.0
         my = (y1 + y2) / 2.0
         
         pitch = width_nm + gap_nm
         
-        if dist <= pitch:
-            print("Error: The distance between pads is smaller than the required differential pitch.")
-            return 0
-            
-        # 2. Calculate turning points (T1 and T2) on the collinear line
-        # They are located symmetrically from the midpoint, separated by the pitch
-        t1_x = mx - (pitch / 2.0) * ux
-        t1_y = my - (pitch / 2.0) * uy
-        
-        t2_x = mx + (pitch / 2.0) * ux
-        t2_y = my + (pitch / 2.0) * uy
-        
-        # 3. Calculate perpendicular vector for the escape tracks
-        # A 90-degree rotation of (ux, uy) is (-uy, ux). 
-        # We allow flipping the direction using the flip_direction parameter.
-        if not flip_direction:
+        # 2. Analyze the escape direction vector
+        mode_str = str(escape_mode).strip().lower()
+        if mode_str == 'perpendicular':
             px = -uy
             py = ux
         else:
-            px = uy
-            py = -ux
+            try:
+                # Trích xuất con số từ các chuỗi như "22.5 Degrees", "-45 Degrees"
+                angle_str = mode_str.replace("degrees", "").replace("degree", "").strip()
+                angle_deg = float(angle_str)
+                rad = math.radians(angle_deg)
+                px = math.cos(rad)
+                py = math.sin(rad)
+            except ValueError:
+                # Fallback to perpendicular if parsing fails
+                px = -uy
+                py = ux
+                
+        # Handle flip direction
+        if flip_direction:
+            px = -px
+            py = -py
             
-        # 4. Calculate escape endpoints
+        # Normal vector of the escape path to calculate gap compensation
+        nx = -py
+        ny = px
+        
+        # Calculate the projection of the 2-pad vector onto the normal vector
+        dot_product = abs(ux * nx + uy * ny)
+        
+        if dot_product < 0.05: # Too parallel, cannot create the required gap
+            print("Error: The chosen escape angle is too parallel to the pads. Cannot maintain differential gap.")
+            return 0
+            
+        # 3. Extend the breakout distance to ensure the gap is exactly maintained
+        collinear_dist = pitch / dot_product
+        
+        if dist <= collinear_dist:
+            print("Error: The pads are too close to breakout at this angle while maintaining the gap.")
+            return 0
+            
+        # 4. Determine the 2 turning points (T1, T2)
+        t1_x = mx - (collinear_dist / 2.0) * ux
+        t1_y = my - (collinear_dist / 2.0) * uy
+        
+        t2_x = mx + (collinear_dist / 2.0) * ux
+        t2_y = my + (collinear_dist / 2.0) * uy
+        
+        # 5. Determine the escape endpoints (E1, E2)
         e1_x = t1_x + escape_length * px
         e1_y = t1_y + escape_length * py
         
@@ -386,7 +414,7 @@ class KiCadPCB:
             
             self.board.create_items(items_to_create)
             self.board.push_commit(commit, "Auto Diff Pair Breakout")
-            print("Successfully created collinear differential pair breakout.")
+            print(f"Successfully created differential pair breakout at {escape_mode}.")
             return 1
             
         except Exception as e:

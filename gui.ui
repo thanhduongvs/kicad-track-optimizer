@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>439</width>
-    <height>337</height>
+    <width>402</width>
+    <height>369</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -110,13 +110,10 @@
             <item row="1" column="1">
              <widget class="QLineEdit" name="editGap"/>
             </item>
-            <item row="0" column="1">
-             <widget class="QLineEdit" name="editWidth"/>
-            </item>
-            <item row="0" column="0">
-             <widget class="QLabel" name="label">
+            <item row="2" column="0">
+             <widget class="QLabel" name="label_3">
               <property name="text">
-               <string>DP Width:</string>
+               <string>Escape Length:</string>
               </property>
              </widget>
             </item>
@@ -130,10 +127,23 @@
               </property>
              </widget>
             </item>
-            <item row="2" column="0">
-             <widget class="QLabel" name="label_3">
+            <item row="0" column="1">
+             <widget class="QLineEdit" name="editWidth"/>
+            </item>
+            <item row="0" column="0">
+             <widget class="QLabel" name="label">
               <property name="text">
-               <string>Escape Length:</string>
+               <string>DP Width:</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="1">
+             <widget class="QComboBox" name="comboMode"/>
+            </item>
+            <item row="3" column="0">
+             <widget class="QLabel" name="label_5">
+              <property name="text">
+               <string>Escape Mode:</string>
               </property>
              </widget>
             </item>
@@ -147,7 +157,7 @@
              </font>
             </property>
             <property name="text">
-             <string>Note: Please select exactly 2 pads before running this tool</string>
+             <string>Please select exactly 2 pads before running this tool</string>
             </property>
            </widget>
           </item>
@@ -178,7 +188,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>439</width>
+     <width>402</width>
      <height>23</height>
     </rect>
    </property>

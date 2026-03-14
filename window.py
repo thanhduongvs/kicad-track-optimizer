@@ -19,6 +19,7 @@ class MainWindow(QMainWindow):
         self.ui.editWidth.setText("8.0")
         self.ui.editGap.setText("8.0")
         self.ui.editLength.setText("60.0")
+        self.ui.comboMode.addItems(["Perpendicular", "0 Degrees", "22.5 Degrees", "45 Degrees", "67.5 Degrees", "90 Degrees", "-22.5 Degrees", "-45 Degrees", "-67.5 Degrees", "-90 Degrees"])
         self.ui.radioRemove.setChecked(True)
         self.ui.radioMil.setChecked(True)
         self.ui.radioMil.toggled.connect(self.on_unit_changed)
@@ -58,7 +59,8 @@ class MainWindow(QMainWindow):
         gap = int(self.unit*parse_float(self.ui.editGap.text()))
         escape_length = int(self.unit*parse_float(self.ui.editLength.text()))
         flip = self.ui.checkFlip.isChecked()
-        status = self.pcb.breakout_diff_pair(width, gap, escape_length, flip)
+        mode = self.ui.comboMode.currentText()
+        status = self.pcb.breakout_diff_pair(width, gap, escape_length, mode, flip)
         if status == 2:
             QMessageBox.information(self, "Message", "Please select exactly 2 pads before running this tool")
 

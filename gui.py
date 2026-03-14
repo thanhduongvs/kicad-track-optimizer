@@ -15,16 +15,17 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QFont, QFontDatabase, QGradient, QIcon,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
-from PySide6.QtWidgets import (QApplication, QCheckBox, QGridLayout, QHBoxLayout,
-    QLabel, QLayout, QLineEdit, QMainWindow,
-    QMenuBar, QPushButton, QRadioButton, QSizePolicy,
-    QStatusBar, QTabWidget, QVBoxLayout, QWidget)
+from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QGridLayout,
+    QHBoxLayout, QLabel, QLayout, QLineEdit,
+    QMainWindow, QMenuBar, QPushButton, QRadioButton,
+    QSizePolicy, QStatusBar, QTabWidget, QVBoxLayout,
+    QWidget)
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
-        MainWindow.resize(439, 337)
+        MainWindow.resize(402, 369)
         self.centralwidget = QWidget(MainWindow)
         self.centralwidget.setObjectName(u"centralwidget")
         self.gridLayout_3 = QGridLayout(self.centralwidget)
@@ -105,15 +106,10 @@ class Ui_MainWindow(object):
 
         self.gridLayout.addWidget(self.editGap, 1, 1, 1, 1)
 
-        self.editWidth = QLineEdit(self.tab_2)
-        self.editWidth.setObjectName(u"editWidth")
+        self.label_3 = QLabel(self.tab_2)
+        self.label_3.setObjectName(u"label_3")
 
-        self.gridLayout.addWidget(self.editWidth, 0, 1, 1, 1)
-
-        self.label = QLabel(self.tab_2)
-        self.label.setObjectName(u"label")
-
-        self.gridLayout.addWidget(self.label, 0, 0, 1, 1)
+        self.gridLayout.addWidget(self.label_3, 2, 0, 1, 1)
 
         self.editLength = QLineEdit(self.tab_2)
         self.editLength.setObjectName(u"editLength")
@@ -125,10 +121,25 @@ class Ui_MainWindow(object):
 
         self.gridLayout.addWidget(self.label_2, 1, 0, 1, 1)
 
-        self.label_3 = QLabel(self.tab_2)
-        self.label_3.setObjectName(u"label_3")
+        self.editWidth = QLineEdit(self.tab_2)
+        self.editWidth.setObjectName(u"editWidth")
 
-        self.gridLayout.addWidget(self.label_3, 2, 0, 1, 1)
+        self.gridLayout.addWidget(self.editWidth, 0, 1, 1, 1)
+
+        self.label = QLabel(self.tab_2)
+        self.label.setObjectName(u"label")
+
+        self.gridLayout.addWidget(self.label, 0, 0, 1, 1)
+
+        self.comboMode = QComboBox(self.tab_2)
+        self.comboMode.setObjectName(u"comboMode")
+
+        self.gridLayout.addWidget(self.comboMode, 3, 1, 1, 1)
+
+        self.label_5 = QLabel(self.tab_2)
+        self.label_5.setObjectName(u"label_5")
+
+        self.gridLayout.addWidget(self.label_5, 3, 0, 1, 1)
 
 
         self.verticalLayout_4.addLayout(self.gridLayout)
@@ -161,7 +172,7 @@ class Ui_MainWindow(object):
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QMenuBar(MainWindow)
         self.menubar.setObjectName(u"menubar")
-        self.menubar.setGeometry(QRect(0, 0, 439, 23))
+        self.menubar.setGeometry(QRect(0, 0, 402, 23))
         MainWindow.setMenuBar(self.menubar)
         self.statusbar = QStatusBar(MainWindow)
         self.statusbar.setObjectName(u"statusbar")
@@ -186,10 +197,11 @@ class Ui_MainWindow(object):
         self.radioMil.setText(QCoreApplication.translate("MainWindow", u"mil", None))
         self.radioMM.setText(QCoreApplication.translate("MainWindow", u"mm", None))
         self.checkFlip.setText(QCoreApplication.translate("MainWindow", u"Flip direction escape length", None))
-        self.label.setText(QCoreApplication.translate("MainWindow", u"DP Width:", None))
-        self.label_2.setText(QCoreApplication.translate("MainWindow", u"DP Gap:", None))
         self.label_3.setText(QCoreApplication.translate("MainWindow", u"Escape Length:", None))
-        self.label_4.setText(QCoreApplication.translate("MainWindow", u"Note: Please select exactly 2 pads before running this tool", None))
+        self.label_2.setText(QCoreApplication.translate("MainWindow", u"DP Gap:", None))
+        self.label.setText(QCoreApplication.translate("MainWindow", u"DP Width:", None))
+        self.label_5.setText(QCoreApplication.translate("MainWindow", u"Escape Mode:", None))
+        self.label_4.setText(QCoreApplication.translate("MainWindow", u"Please select exactly 2 pads before running this tool", None))
         self.buttonBreakout.setText(QCoreApplication.translate("MainWindow", u"Breakout Diff Pair", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2), QCoreApplication.translate("MainWindow", u"Differential Pair", None))
         self.buttonClose.setText(QCoreApplication.translate("MainWindow", u"Close", None))
