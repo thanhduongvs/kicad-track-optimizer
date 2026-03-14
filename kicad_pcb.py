@@ -1,11 +1,17 @@
 import re
+import math
 from kipy import KiCad
 from kipy.board import Board
-from kipy.board_types import Track, ArcTrack, FootprintInstance
+from kipy.board_types import Track, ArcTrack, Pad, FootprintInstance
 from typing import Set, Optional, List, Tuple, DefaultDict
 from collections import defaultdict
 from kipy.geometry import Vector2
 from dataclasses import dataclass, field
+
+class NetPadMap:
+    def __init__(self, name: str):
+        self.net_name: str = name
+        self.pads: List[Pad] = []
 
 @dataclass(frozen=True)
 class TrackGroupKey:
@@ -47,47 +53,62 @@ class KiCadPCB:
             self.layers = []
             return False, str(e)
         
-    def check_overlap_and_find_extremities(self, t1: Track, t2: Track, tol=1e-4):
+    def check_overlap_and_find_extremities(self, t1: Track, t2: Track, tol_deg=0.1):
         """
-        Applies KiCad C++ Vector Geometry to check for collinearity and overlapping.
+        Applies normalized Vector Geometry to mitigate nanometer rounding errors.
+        tol_deg: Maximum angular deviation allowed to consider 2 tracks collinear (Default 0.1 degrees).
         """
+        import math
+        
         dx1 = t1.end.x - t1.start.x
         dy1 = t1.end.y - t1.start.y
-        len_sq = dx1**2 + dy1**2
+        len1 = math.hypot(dx1, dy1)
         
-        if len_sq < 1e-6: 
-            return False, None, None # Skip if the track is just a point
+        if len1 < 1e-6: 
+            return False, None, None 
             
         dx2 = t2.end.x - t2.start.x
         dy2 = t2.end.y - t2.start.y
+        len2 = math.hypot(dx2, dy2)
         
-        # 1. Check for parallelism (Cross product == 0)
-        if abs(dx1 * dy2 - dy1 * dx2) > tol: 
+        if len2 < 1e-6:
+            return False, None, None
+
+        # Convert angular tolerance from degrees to Radians for comparison with sin(theta)
+        tol_rad = math.radians(tol_deg)
+
+        # 1. Check parallelism using Normalized Cross Product (Calculates sin of the deviation angle)
+        cross_1 = dx1 * dy2 - dy1 * dx2
+        sin_theta1 = cross_1 / (len1 * len2)
+        
+        if abs(sin_theta1) > tol_rad: 
             return False, None, None
             
-        # 2. Check for collinearity
+        # 2. Check collinearity
         dx3 = t2.start.x - t1.start.x
         dy3 = t2.start.y - t1.start.y
-        if abs(dx1 * dy3 - dy1 * dx3) > tol:
-            return False, None, None
+        len3 = math.hypot(dx3, dy3)
+        
+        # Only check collinearity if the starting points of the 2 tracks do not perfectly overlap
+        if len3 > 1e-6:
+            cross_2 = dx1 * dy3 - dy1 * dx3
+            sin_theta2 = cross_2 / (len1 * len3)
+            if abs(sin_theta2) > tol_rad:
+                return False, None, None
             
         # 3. Check for touching/overlapping using parametric equations
-        # Assuming T1 runs from t=0 to t=1. Find the interval t of T2 projected onto T1.
+        len_sq = len1 ** 2
         t_C = (dx1 * dx3 + dy1 * dy3) / len_sq
         t_D = (dx1 * (t2.end.x - t1.start.x) + dy1 * (t2.end.y - t1.start.y)) / len_sq
         
         t2_min, t2_max = min(t_C, t_D), max(t_C, t_D)
         
-        # If the interval [0, 1] of T1 and [t2_min, t2_max] of T2 intersect
-        if max(0, t2_min) <= min(1, t2_max) + 1e-5:
-            # Collect all 4 points and project them onto the line to find the 2 furthest points
+        # Accept intersection exactly at the extremities (t=0 or t=1) with a 1e-4 tolerance
+        if max(0.0, t2_min) <= min(1.0, t2_max) + 1e-4:
             points = [t1.start, t1.end, t2.start, t2.end]
             projections = [((p.x - t1.start.x)*dx1 + (p.y - t1.start.y)*dy1, p) for p in points]
             
-            # Sort by projection value
             projections.sort(key=lambda item: item[0])
-            
-            # Return True and the 2 extremities
             return True, projections[0][1], projections[-1][1]
             
         return False, None, None
@@ -183,18 +204,36 @@ class KiCadPCB:
             print("No collinear/overlapping tracks to merge.")
 
     def remove_stubs_recursive(self):
-        print("Recursively scanning for stub tracks...")
-        
-        # THE POWER OF DEFAULTDICT: 
-        # If querying a non-existent coordinate, it automatically initializes a ConnectionNode()
         point_map: DefaultDict[Tuple[float, float, int], ConnectionNode] = defaultdict(ConnectionNode)
 
+        # ==========================================
         # 1. Anchor points using Pads and Vias
+        # ==========================================
+        
+        # Initialize list based on desired structure
+        pads_by_net: List[NetPadMap] = []
+        
         for pad in self.board.get_pads():
+            net_name = pad.net.name if getattr(pad, 'net', None) else ""
+            
+            # Scan array to see if a NetPadMap object for this net_name already exists
+            target_net_map = None
+            for net_map in pads_by_net:
+                if net_map.net_name == net_name:
+                    target_net_map = net_map
+                    break
+            
+            # If it doesn't exist, create it and insert into the array
+            if not target_net_map:
+                target_net_map = NetPadMap(net_name)
+                pads_by_net.append(target_net_map)
+                
+            # Append pad to the inner array of the object
+            target_net_map.pads.append(pad)
+            
             pos = pad.position
             layers = pad.padstack.layers
             for layer in layers:
-                # Call the .is_anchored attribute directly, very intuitive
                 point_map[get_key(pos, layer)].is_anchored = True
 
         for via in self.board.get_vias():
@@ -203,63 +242,157 @@ class KiCadPCB:
             for layer in layers:
                 point_map[get_key(pos, layer)].is_anchored = True
 
+        # ==========================================
         # 2. Add Tracks to the Graph
-        tracks = self.board.get_tracks()
-        #tracks = [t for t in self.board.get_tracks() if isinstance(t, (Track, ArcTrack))]
-        for track in tracks:
-            for pos in (track.start, track.end):
-                key = get_key(pos, track.layer)
-                point_map[key].tracks.add(track.id.value)
-
-        track_dict = {t.id.value: t for t in tracks}
-
-        # 3. Find the initial stubs
-        stub_ids = []
-        for key, node in point_map.items():
-            # Self-documenting code
-            if len(node.tracks) == 1 and not node.is_anchored:
-                stub_ids.append(list(node.tracks)[0])
-
-        # 4. Recursive shaving algorithm (Iterative Shaving)
-        deleted_ids = set()
+        # ==========================================
+        tracks = [t for t in self.board.get_tracks() if isinstance(t, (Track, ArcTrack))]
         
-        while stub_ids:
-            t_id = stub_ids.pop()
-            if t_id in deleted_ids: 
-                continue
-                
-            deleted_ids.add(t_id)
-            track = track_dict[t_id]
+        for track in tracks:
+            net_name = track.net.name if getattr(track, 'net', None) else ""
             
-            # Remove this track from both ends of the graph
+            # Scan array to get the Pad list of the corresponding Net
+            item_pads = []
+            for net_map in pads_by_net:
+                if net_map.net_name == net_name:
+                    item_pads = net_map.pads
+                    break
+            
             for pos in (track.start, track.end):
                 key = get_key(pos, track.layer)
                 node = point_map[key]
+                node.tracks.add(track.id.value)
                 
-                if t_id in node.tracks:
-                    node.tracks.remove(t_id)
-                
-                # RECURSIVE CHECK: Does the inner connection point become a new stub?
-                if len(node.tracks) == 1 and not node.is_anchored:
-                    remaining_t_id = list(node.tracks)[0]
-                    stub_ids.append(remaining_t_id)
-
-        # 5. Batch Execute API
+                # Bounding Box Check
+                if not node.is_anchored and item_pads:
+                    for pad in item_pads:
+                        if track.layer in pad.padstack.layers:
+                            w, h = 0, 0
+                            if pad.padstack.copper_layers:
+                                pad_size = pad.padstack.copper_layers[0].size
+                                w = pad_size.x
+                                h = pad_size.y
+                            
+                            dx = abs(pos.x - pad.position.x)
+                            dy = abs(pos.y - pad.position.y)
+                            
+                            if dx <= (w / 2.0) + 10000 and dy <= (h / 2.0) + 10000:
+                                node.is_anchored = True
+                                break
+        print("Recursively scanning for stub tracks done")
+    
+    def breakout_diff_pair(self, width_nm=250000, gap_nm=200000, escape_length=2000000, flip_direction=False) -> int:
+        """
+        Automates differential pair breakout. 
+        Step 1: Tracks exit pads collinearly along the line connecting the two pad centers.
+        Step 2: Tracks turn 90 degrees to escape perpendicularly.
+        """
+        print("Processing Collinear Differential Pair Breakout...")
+        
+        
+        selected_items = self.board.get_selection()
+        selected_pads = [item for item in selected_items if isinstance(item, Pad)]
+        
+        if len(selected_pads) != 2:
+            print(f"Error: Exactly 2 pads must be selected. (Currently selected: {len(selected_pads)})")
+            return 2
+            
+        pad1, pad2 = selected_pads[0], selected_pads[1]
+        layer = pad1.padstack.layers[0] if hasattr(pad1, 'padstack') else 0
+        
+        x1, y1 = pad1.position.x, pad1.position.y
+        x2, y2 = pad2.position.x, pad2.position.y
+        
+        # 1. Calculate the vector from Pad 1 to Pad 2
+        vx = x2 - x1
+        vy = y2 - y1
+        dist = math.hypot(vx, vy)
+        
+        if dist < 1e-6:
+            print("Error: Pads have identical coordinates.")
+            return 0
+            
+        # Unit vector pointing from Pad 1 to Pad 2
+        ux = vx / dist
+        uy = vy / dist
+        
+        # Midpoint between the two pads
+        mx = (x1 + x2) / 2.0
+        my = (y1 + y2) / 2.0
+        
+        pitch = width_nm + gap_nm
+        
+        if dist <= pitch:
+            print("Error: The distance between pads is smaller than the required differential pitch.")
+            return 0
+            
+        # 2. Calculate turning points (T1 and T2) on the collinear line
+        # They are located symmetrically from the midpoint, separated by the pitch
+        t1_x = mx - (pitch / 2.0) * ux
+        t1_y = my - (pitch / 2.0) * uy
+        
+        t2_x = mx + (pitch / 2.0) * ux
+        t2_y = my + (pitch / 2.0) * uy
+        
+        # 3. Calculate perpendicular vector for the escape tracks
+        # A 90-degree rotation of (ux, uy) is (-uy, ux). 
+        # We allow flipping the direction using the flip_direction parameter.
+        if not flip_direction:
+            px = -uy
+            py = ux
+        else:
+            px = uy
+            py = -ux
+            
+        # 4. Calculate escape endpoints
+        e1_x = t1_x + escape_length * px
+        e1_y = t1_y + escape_length * py
+        
+        e2_x = t2_x + escape_length * px
+        e2_y = t2_y + escape_length * py
+        
+        items_to_create = []
         commit = self.board.begin_commit()
         
-        if deleted_ids:
-            tracks_to_delete = [track_dict[t_id] for t_id in deleted_ids]
+        try:
+            # --- PAD 1 ROUTING ---
+            t1_in = Track()
+            t1_in.start = Vector2.from_xy(int(x1), int(y1))
+            t1_in.end = Vector2.from_xy(int(t1_x), int(t1_y))
+            t1_in.width, t1_in.layer = width_nm, layer
+            if hasattr(pad1, 'net'): t1_in.net = pad1.net
+            items_to_create.append(t1_in)
             
-            try:
-                self.board.remove_items(tracks_to_delete)
-                self.board.push_commit(commit, f"Removed {len(tracks_to_delete)} stub tracks")
-                print(f"Successfully cleaned {len(tracks_to_delete)} stub tracks (including chained segments).")
-            except Exception as e:
-                self.board.drop_commit(commit)
-                print(f"An error occurred while deleting stubs, reverted: {e}")
-        else:
+            t1_out = Track()
+            t1_out.start = Vector2.from_xy(int(t1_x), int(t1_y))
+            t1_out.end = Vector2.from_xy(int(e1_x), int(e1_y))
+            t1_out.width, t1_out.layer = width_nm, layer
+            if hasattr(pad1, 'net'): t1_out.net = pad1.net
+            items_to_create.append(t1_out)
+            
+            # --- PAD 2 ROUTING ---
+            t2_in = Track()
+            t2_in.start = Vector2.from_xy(int(x2), int(y2))
+            t2_in.end = Vector2.from_xy(int(t2_x), int(t2_y))
+            t2_in.width, t2_in.layer = width_nm, layer
+            if hasattr(pad2, 'net'): t2_in.net = pad2.net
+            items_to_create.append(t2_in)
+            
+            t2_out = Track()
+            t2_out.start = Vector2.from_xy(int(t2_x), int(t2_y))
+            t2_out.end = Vector2.from_xy(int(e2_x), int(e2_y))
+            t2_out.width, t2_out.layer = width_nm, layer
+            if hasattr(pad2, 'net'): t2_out.net = pad2.net
+            items_to_create.append(t2_out)
+            
+            self.board.create_items(items_to_create)
+            self.board.push_commit(commit, "Auto Diff Pair Breakout")
+            print("Successfully created collinear differential pair breakout.")
+            return 1
+            
+        except Exception as e:
             self.board.drop_commit(commit)
-            print("Scan complete. No stub tracks found.")
+            print(f"Error creating tracks: {e}")
+            return 0
 
 def natural_sort_key(footprint: FootprintInstance):
     text = footprint.reference_field.text.value
