@@ -12,12 +12,10 @@ class MainWindow(QMainWindow):
         self.setWindowTitle(f"Track Optimizer v{version}")
         self.pcb = KiCadPCB()
 
+        self.ui.radioRemove.setChecked(True)
         self.ui.buttonClose.clicked.connect(self.close)
         self.ui.buttonConnect.clicked.connect(self.load_initial_data)
         self.ui.buttonRun.clicked.connect(self.button_run_clicked)
-        self.ui.checkMerg.toggled.connect(self.on_check_merg_toggle)
-        self.ui.checkRemove.toggled.connect(self.on_check_remove_toggle)
-        self.ui.checkTotal.toggled.connect(self.on_check_total_toggle)
 
         QTimer.singleShot(500, self.load_initial_data)
         
@@ -32,32 +30,17 @@ class MainWindow(QMainWindow):
             self.ui.statusbar.showMessage(status)
             QMessageBox.information(self, "Message", status)
 
-    def on_check_remove_toggle(self):
-        checked = self.ui.checkRemove.isChecked()
-        if checked:
-            self.ui.checkMerg.setChecked(False)
-            self.ui.checkTotal.setChecked(False)
-
-    def on_check_merg_toggle(self):
-        checked = self.ui.checkMerg.isChecked()
-        if checked:
-            self.ui.checkRemove.setChecked(False)
-            self.ui.checkTotal.setChecked(False)
-
-    def on_check_total_toggle(self):
-        checked = self.ui.checkTotal.isChecked()
-        if checked:
-            self.ui.checkRemove.setChecked(False)
-            self.ui.checkMerg.setChecked(False)
-
     def button_run_clicked(self):
-        check_remove = self.ui.checkRemove.isChecked()
-        check_merg = self.ui.checkMerg.isChecked()
-        check_total = self.ui.checkTotal.isChecked()
+        check_remove = self.ui.radioRemove.isChecked()
+        check_merg = self.ui.radioMerg.isChecked()
+        check_total = self.ui.radioTotal.isChecked()
         if check_remove:
+            print("Remove stubs track")
             self.pcb.remove_stubs_recursive()
         if check_merg:
+            print("Merging collinear tracks")
             self.pcb.merge_overlapping_tracks()
         if check_total:
+            print("Remove stubs track & Merging collinear tracks")
             self.pcb.remove_stubs_recursive()
             self.pcb.merge_overlapping_tracks()

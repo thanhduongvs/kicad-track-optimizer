@@ -1,7 +1,7 @@
 import re
 from kipy import KiCad
 from kipy.board import Board
-from kipy.board_types import Track, FootprintInstance
+from kipy.board_types import Track, ArcTrack, FootprintInstance
 from typing import Set, Optional, List, Tuple, DefaultDict
 from collections import defaultdict
 from kipy.geometry import Vector2
@@ -204,7 +204,8 @@ class KiCadPCB:
                 point_map[get_key(pos, layer)].is_anchored = True
 
         # 2. Add Tracks to the Graph
-        tracks = [t for t in self.board.get_tracks() if isinstance(t, Track)]
+        tracks = self.board.get_tracks()
+        #tracks = [t for t in self.board.get_tracks() if isinstance(t, (Track, ArcTrack))]
         for track in tracks:
             for pos in (track.start, track.end):
                 key = get_key(pos, track.layer)
@@ -259,10 +260,6 @@ class KiCadPCB:
         else:
             self.board.drop_commit(commit)
             print("Scan complete. No stub tracks found.")
-
-    def run(self):
-        self.merge_overlapping_tracks()
-        self.remove_stubs_recursive()
 
 def natural_sort_key(footprint: FootprintInstance):
     text = footprint.reference_field.text.value

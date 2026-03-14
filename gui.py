@@ -15,8 +15,8 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QFont, QFontDatabase, QGradient, QIcon,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
-from PySide6.QtWidgets import (QApplication, QCheckBox, QGridLayout, QHBoxLayout,
-    QLayout, QMainWindow, QMenuBar, QPushButton,
+from PySide6.QtWidgets import (QApplication, QGridLayout, QHBoxLayout, QLayout,
+    QMainWindow, QMenuBar, QPushButton, QRadioButton,
     QSizePolicy, QStatusBar, QVBoxLayout, QWidget)
 
 class Ui_MainWindow(object):
@@ -56,20 +56,20 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_3 = QVBoxLayout()
         self.verticalLayout_3.setObjectName(u"verticalLayout_3")
-        self.checkRemove = QCheckBox(self.centralwidget)
-        self.checkRemove.setObjectName(u"checkRemove")
+        self.radioRemove = QRadioButton(self.centralwidget)
+        self.radioRemove.setObjectName(u"radioRemove")
 
-        self.verticalLayout_3.addWidget(self.checkRemove)
+        self.verticalLayout_3.addWidget(self.radioRemove)
 
-        self.checkMerg = QCheckBox(self.centralwidget)
-        self.checkMerg.setObjectName(u"checkMerg")
+        self.radioMerg = QRadioButton(self.centralwidget)
+        self.radioMerg.setObjectName(u"radioMerg")
 
-        self.verticalLayout_3.addWidget(self.checkMerg)
+        self.verticalLayout_3.addWidget(self.radioMerg)
 
-        self.checkTotal = QCheckBox(self.centralwidget)
-        self.checkTotal.setObjectName(u"checkTotal")
+        self.radioTotal = QRadioButton(self.centralwidget)
+        self.radioTotal.setObjectName(u"radioTotal")
 
-        self.verticalLayout_3.addWidget(self.checkTotal)
+        self.verticalLayout_3.addWidget(self.radioTotal)
 
 
         self.gridLayout_3.addLayout(self.verticalLayout_3, 0, 0, 1, 1)
@@ -93,8 +93,8 @@ class Ui_MainWindow(object):
         self.buttonClose.setText(QCoreApplication.translate("MainWindow", u"Close", None))
         self.buttonConnect.setText(QCoreApplication.translate("MainWindow", u"Connect to KiCad", None))
         self.buttonRun.setText(QCoreApplication.translate("MainWindow", u"Run", None))
-        self.checkRemove.setText(QCoreApplication.translate("MainWindow", u"Remove stubs track", None))
-        self.checkMerg.setText(QCoreApplication.translate("MainWindow", u"Merging collinear tracks", None))
-        self.checkTotal.setText(QCoreApplication.translate("MainWindow", u"Remove stubs track + Merging collinear tracks", None))
+        self.radioRemove.setText(QCoreApplication.translate("MainWindow", u"Remove stubs track", None))
+        self.radioMerg.setText(QCoreApplication.translate("MainWindow", u"Merging collinear tracks", None))
+        self.radioTotal.setText(QCoreApplication.translate("MainWindow", u"Remove stubs track + Merging collinear tracks", None))
     # retranslateUi
 

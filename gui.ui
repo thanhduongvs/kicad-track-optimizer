@@ -50,21 +50,21 @@
     <item row="0" column="0">
      <layout class="QVBoxLayout" name="verticalLayout_3">
       <item>
-       <widget class="QCheckBox" name="checkRemove">
+       <widget class="QRadioButton" name="radioRemove">
         <property name="text">
          <string>Remove stubs track</string>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QCheckBox" name="checkMerg">
+       <widget class="QRadioButton" name="radioMerg">
         <property name="text">
          <string>Merging collinear tracks</string>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QCheckBox" name="checkTotal">
+       <widget class="QRadioButton" name="radioTotal">
         <property name="text">
          <string>Remove stubs track + Merging collinear tracks</string>
         </property>
