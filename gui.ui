@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>402</width>
-    <height>369</height>
+    <width>410</width>
+    <height>402</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -15,13 +15,6 @@
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout_3">
-    <item row="0" column="0">
-     <layout class="QVBoxLayout" name="verticalLayout">
-      <property name="sizeConstraint">
-       <enum>QLayout::SizeConstraint::SetMinimumSize</enum>
-      </property>
-     </layout>
-    </item>
     <item row="1" column="0">
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
@@ -35,37 +28,44 @@
         <item>
          <layout class="QVBoxLayout" name="verticalLayout_3">
           <item>
-           <widget class="QRadioButton" name="radioRemove">
+           <widget class="QPushButton" name="buttonClearUnconnected">
             <property name="text">
-             <string>Remove stubs track</string>
+             <string>Clear Unconnected Tracks</string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QRadioButton" name="radioMerg">
+           <widget class="QPushButton" name="buttonMergingCollinear">
             <property name="text">
-             <string>Merging collinear tracks</string>
+             <string>Merge Collinear Tracks</string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QRadioButton" name="radioTotal">
+           <widget class="QPushButton" name="buttonClearMerging">
             <property name="text">
-             <string>Remove stubs track + Merging collinear tracks</string>
+             <string>Clear Unconnected Tracks + Merge Collinear Tracks</string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QPushButton" name="buttonConnect">
+           <widget class="QPushButton" name="buttonTrackJoiner">
             <property name="text">
-             <string>Connect to KiCad</string>
+             <string>Track Joiner</string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QPushButton" name="buttonRun">
+           <widget class="QPushButton" name="buttonCenterTrack">
             <property name="text">
-             <string>Run</string>
+             <string>Center Track to Pads</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="buttonAlignTrack">
+            <property name="text">
+             <string>Align Tracks Perpendicular to Pads</string>
             </property>
            </widget>
           </item>
@@ -97,7 +97,7 @@
           <item>
            <widget class="QCheckBox" name="checkFlip">
             <property name="text">
-             <string>Flip direction escape length</string>
+             <string>Flip escape direction</string>
             </property>
            </widget>
           </item>
@@ -174,10 +174,24 @@
       </widget>
      </widget>
     </item>
-    <item row="2" column="0">
+    <item row="3" column="0">
      <widget class="QPushButton" name="buttonClose">
       <property name="text">
        <string>Close</string>
+      </property>
+     </widget>
+    </item>
+    <item row="0" column="0">
+     <layout class="QVBoxLayout" name="verticalLayout">
+      <property name="sizeConstraint">
+       <enum>QLayout::SizeConstraint::SetMinimumSize</enum>
+      </property>
+     </layout>
+    </item>
+    <item row="2" column="0">
+     <widget class="QPushButton" name="buttonConnect">
+      <property name="text">
+       <string>Connect to KiCad</string>
       </property>
      </widget>
     </item>
@@ -188,7 +202,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>402</width>
+     <width>410</width>
      <height>23</height>
     </rect>
    </property>

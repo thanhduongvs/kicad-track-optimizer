@@ -1,10 +1,10 @@
 # ![icon](icon.png) KiCad Track Optimizer
 
-<img src="https://img.shields.io/badge/KiCad-v9-brightgreen?style=for-the-badge&logo=KiCad"> <img src="https://img.shields.io/badge/kicad--python-v0.5.0-brightgreen?style=for-the-badge"> <img src="https://img.shields.io/badge/PySide6-Qt-brightgreen?style=for-the-badge">
+<img src="https://img.shields.io/badge/KiCad-v10-brightgreen?style=for-the-badge&logo=KiCad"> <img src="https://img.shields.io/badge/kicad--python-v0.7.1-brightgreen?style=for-the-badge"> <img src="https://img.shields.io/badge/PySide6-Qt-brightgreen?style=for-the-badge">
 
-A powerful Python-based plugin designed to automatically clean up, optimize traces, and route high-speed differential pairs in **KiCad PCB designs**.
+A powerful Python-based plugin designed to automatically clean up, optimize traces, manipulate geometry, and route high-speed differential pairs in **KiCad PCB designs**.
 
-When modifying dense layouts, it is easy to leave behind microscopic unconnected stubs or accidentally draw overlapping tracks. This tool acts as an advanced geometric sweeper to clean your board instantly. Furthermore, it includes a smart breakout generator for differential pairs to ensure perfectly symmetrical and deskewed routing from IC pads.
+When modifying dense layouts, it is easy to leave behind microscopic unconnected stubs or accidentally draw overlapping tracks. This tool acts as an advanced geometric sweeper to clean your board instantly. Furthermore, it includes precision alignment tools and a smart breakout generator for differential pairs to ensure perfectly symmetrical and deskewed routing from IC pads.
 
 <table>
   <tr>
@@ -24,9 +24,14 @@ When modifying dense layouts, it is easy to leave behind microscopic unconnected
 * **Collinear & Overlap Merging:** Uses advanced vector projection to find tracks that are parallel and overlapping, merging them into a single continuous trace.
 * **Smart Net Awareness:** Fully respects KiCad's electrical rules. It will never merge tracks of different nets or different widths, preventing accidental short circuits.
 
+### 🎯 Precision Alignment & Joining *(New)*
+* **Track Joiner:** Select two intersecting tracks, and the tool will automatically calculate their intersection point and snap their endpoints together, creating a perfect geometric corner.
+* **Center Track to Pads:** Select exactly 2 pads and 1 (or 2) tracks. The tool calculates the exact midpoint and dynamically translates the tracks to be perfectly centered between the pads, maintaining the differential gap.
+* **Align Perpendicular to Pads:** Select exactly 2 pads and 1 (or 2) tracks. The tool automatically rotates and centers the tracks so they are perfectly perpendicular to the imaginary line connecting the two pads.
+
 ### ⚡ Differential Pair Breakout
 * **Auto-Deskewed Breakout:** Automatically calculates and routes perfectly symmetrical escape tracks from two selected pads, compensating for any initial pad misalignment.
-* **Collinear to Perpendicular Extrusion:** Generates mathematically perfect $90^\circ$ breakouts with customizable track widths, gaps, and escape lengths.
+* **Customizable Escapes:** Generates breakouts with customizable track widths, gaps, escape lengths, and routing angles (Perpendicular, 45°, 22.5°, etc.).
 * **Flip Direction:** Easily reverse the escape routing direction with a single click to adapt to your surrounding layout.
 
 * **Safe & Reversible:** All operations (both cleaning and routing) are wrapped in native KiCad commits, allowing you to easily `Ctrl+Z` (Undo) the entire process if needed.
@@ -38,12 +43,16 @@ When modifying dense layouts, it is easy to leave behind microscopic unconnected
 3. **For Track Cleanup:**
    - Go to the **Track Optimizer** tab.
    - Choose to remove stubs, merge collinear tracks, or do both.
-   - Click **Run**.
-4. **For Differential Pairs:**
+   - Click the respective button.
+4. **For Track Alignment & Joining:**
+   - Select the required items on your PCB (e.g., 2 tracks for joining, or 2 pads + tracks for alignment).
+   - Go to the **Track Optimizer** tab.
+   - Click **Track Joiner**, **Center Track to Pads**, or **Align Tracks Perpendicular to Pads**.
+5. **For Differential Pairs:**
    - Select exactly **2 pads** on your PCB.
    - Go to the **Differential Pair** tab.
-   - Set your desired Width, Gap, and Escape Length (supports both mm and mil).
-   - Check "Flip direction" if you want the tracks to escape to the opposite side.
+   - Set your desired Width, Gap, Escape Length, and Escape Mode (supports both mm and mil).
+   - Check "Flip escape direction" if you want the tracks to route to the opposite side.
    - Click **Breakout Diff Pair**.
 
 ## 🛠️ Installation
@@ -57,9 +66,9 @@ Add our custom repo to **the Plugin and Content Manager**, the URL is:
 ### Manual Installation
 - Download the plugin source code as **a .zip** file.
 - Locate your KiCad plugins folder:
-  - **Windows:** `Documents\KiCad\9.0\plugins`
-  - **Linux:** `~/.local/share/kicad/9.0/plugins`
-  - **macOS:** `~/Documents/KiCad/9.0/plugins`
+  - **Windows:** `Documents\KiCad\10.0\plugins` (or `9.0\plugins`)
+  - **Linux:** `~/.local/share/kicad/10.0/plugins` (or `9.0/plugins`)
+  - **macOS:** `~/Documents/KiCad/10.0/plugins` (or `9.0/plugins`)
 - Extract the archive to the KiCad plugins directory.
 - Restart KiCad / PCB Editor.
 

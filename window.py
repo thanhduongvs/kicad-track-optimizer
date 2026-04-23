@@ -20,12 +20,16 @@ class MainWindow(QMainWindow):
         self.ui.editGap.setText("7.0")
         self.ui.editLength.setText("40.0")
         self.ui.comboMode.addItems(["Perpendicular", "0 Degrees", "22.5 Degrees", "45 Degrees", "67.5 Degrees", "90 Degrees", "-22.5 Degrees", "-45 Degrees", "-67.5 Degrees", "-90 Degrees"])
-        self.ui.radioRemove.setChecked(True)
         self.ui.radioMil.setChecked(True)
         self.ui.radioMil.toggled.connect(self.on_unit_changed)
         self.ui.buttonClose.clicked.connect(self.close)
         self.ui.buttonConnect.clicked.connect(self.load_initial_data)
-        self.ui.buttonRun.clicked.connect(self.button_run_clicked)
+        self.ui.buttonClearUnconnected.clicked.connect(self.button_clear_unconnected)
+        self.ui.buttonMergingCollinear.clicked.connect(self.button_merging_collinear)
+        self.ui.buttonClearMerging.clicked.connect(self.button_clear_merging)
+        self.ui.buttonTrackJoiner.clicked.connect(self.button_track_joiner)
+        self.ui.buttonCenterTrack.clicked.connect(self.button_center_track)
+        self.ui.buttonAlignTrack.clicked.connect(self.button_align_track)
         self.ui.buttonBreakout.clicked.connect(self.button_breakout_clicked)
         QTimer.singleShot(500, self.load_initial_data)
     
@@ -39,21 +43,34 @@ class MainWindow(QMainWindow):
             self.ui.statusbar.showMessage(status)
             QMessageBox.information(self, "Message", status)
 
-    def button_run_clicked(self):
-        check_remove = self.ui.radioRemove.isChecked()
-        check_merg = self.ui.radioMerg.isChecked()
-        check_total = self.ui.radioTotal.isChecked()
-        if check_remove:
-            print("Remove stubs track")
-            self.pcb.remove_stubs_recursive()
-        if check_merg:
-            print("Merging collinear tracks")
-            self.pcb.merge_overlapping_tracks()
-        if check_total:
-            print("Remove stubs track & Merging collinear tracks")
-            self.pcb.remove_stubs_recursive()
-            self.pcb.merge_overlapping_tracks()
+    def button_clear_unconnected(self):
+        print("Remove stubs track")
+        self.pcb.remove_stubs_recursive()
+    
+    def button_merging_collinear(self):
+        print("Merging collinear tracks")
+        self.pcb.merge_overlapping_tracks()
 
+    def button_clear_merging(self):
+        print("Remove stubs track & Merging collinear tracks")
+        self.pcb.remove_stubs_recursive()
+        self.pcb.merge_overlapping_tracks()
+
+    def button_track_joiner(self):
+        msg = self.pcb.track_join()
+        if msg:
+            QMessageBox.information(self, "Message", msg)
+        
+    def button_center_track(self):
+        msg = self.pcb.center_tracks_to_pads()
+        if msg:
+            QMessageBox.information(self, "Message", msg)
+        
+    def button_align_track(self):
+        msg = self.pcb.align_perpendicular_to_pads()
+        if msg:
+            QMessageBox.information(self, "Message", msg)
+        
     def button_breakout_clicked(self):
         width = int(self.unit*parse_float(self.ui.editWidth.text()))
         gap = int(self.unit*parse_float(self.ui.editGap.text()))

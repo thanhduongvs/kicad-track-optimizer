@@ -25,17 +25,11 @@ class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
-        MainWindow.resize(402, 369)
+        MainWindow.resize(410, 402)
         self.centralwidget = QWidget(MainWindow)
         self.centralwidget.setObjectName(u"centralwidget")
         self.gridLayout_3 = QGridLayout(self.centralwidget)
         self.gridLayout_3.setObjectName(u"gridLayout_3")
-        self.verticalLayout = QVBoxLayout()
-        self.verticalLayout.setObjectName(u"verticalLayout")
-        self.verticalLayout.setSizeConstraint(QLayout.SizeConstraint.SetMinimumSize)
-
-        self.gridLayout_3.addLayout(self.verticalLayout, 0, 0, 1, 1)
-
         self.tabWidget = QTabWidget(self.centralwidget)
         self.tabWidget.setObjectName(u"tabWidget")
         self.tab = QWidget()
@@ -44,30 +38,35 @@ class Ui_MainWindow(object):
         self.verticalLayout_2.setObjectName(u"verticalLayout_2")
         self.verticalLayout_3 = QVBoxLayout()
         self.verticalLayout_3.setObjectName(u"verticalLayout_3")
-        self.radioRemove = QRadioButton(self.tab)
-        self.radioRemove.setObjectName(u"radioRemove")
+        self.buttonClearUnconnected = QPushButton(self.tab)
+        self.buttonClearUnconnected.setObjectName(u"buttonClearUnconnected")
 
-        self.verticalLayout_3.addWidget(self.radioRemove)
+        self.verticalLayout_3.addWidget(self.buttonClearUnconnected)
 
-        self.radioMerg = QRadioButton(self.tab)
-        self.radioMerg.setObjectName(u"radioMerg")
+        self.buttonMergingCollinear = QPushButton(self.tab)
+        self.buttonMergingCollinear.setObjectName(u"buttonMergingCollinear")
 
-        self.verticalLayout_3.addWidget(self.radioMerg)
+        self.verticalLayout_3.addWidget(self.buttonMergingCollinear)
 
-        self.radioTotal = QRadioButton(self.tab)
-        self.radioTotal.setObjectName(u"radioTotal")
+        self.buttonClearMerging = QPushButton(self.tab)
+        self.buttonClearMerging.setObjectName(u"buttonClearMerging")
 
-        self.verticalLayout_3.addWidget(self.radioTotal)
+        self.verticalLayout_3.addWidget(self.buttonClearMerging)
 
-        self.buttonConnect = QPushButton(self.tab)
-        self.buttonConnect.setObjectName(u"buttonConnect")
+        self.buttonTrackJoiner = QPushButton(self.tab)
+        self.buttonTrackJoiner.setObjectName(u"buttonTrackJoiner")
 
-        self.verticalLayout_3.addWidget(self.buttonConnect)
+        self.verticalLayout_3.addWidget(self.buttonTrackJoiner)
 
-        self.buttonRun = QPushButton(self.tab)
-        self.buttonRun.setObjectName(u"buttonRun")
+        self.buttonCenterTrack = QPushButton(self.tab)
+        self.buttonCenterTrack.setObjectName(u"buttonCenterTrack")
 
-        self.verticalLayout_3.addWidget(self.buttonRun)
+        self.verticalLayout_3.addWidget(self.buttonCenterTrack)
+
+        self.buttonAlignTrack = QPushButton(self.tab)
+        self.buttonAlignTrack.setObjectName(u"buttonAlignTrack")
+
+        self.verticalLayout_3.addWidget(self.buttonAlignTrack)
 
 
         self.verticalLayout_2.addLayout(self.verticalLayout_3)
@@ -167,12 +166,23 @@ class Ui_MainWindow(object):
         self.buttonClose = QPushButton(self.centralwidget)
         self.buttonClose.setObjectName(u"buttonClose")
 
-        self.gridLayout_3.addWidget(self.buttonClose, 2, 0, 1, 1)
+        self.gridLayout_3.addWidget(self.buttonClose, 3, 0, 1, 1)
+
+        self.verticalLayout = QVBoxLayout()
+        self.verticalLayout.setObjectName(u"verticalLayout")
+        self.verticalLayout.setSizeConstraint(QLayout.SizeConstraint.SetMinimumSize)
+
+        self.gridLayout_3.addLayout(self.verticalLayout, 0, 0, 1, 1)
+
+        self.buttonConnect = QPushButton(self.centralwidget)
+        self.buttonConnect.setObjectName(u"buttonConnect")
+
+        self.gridLayout_3.addWidget(self.buttonConnect, 2, 0, 1, 1)
 
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QMenuBar(MainWindow)
         self.menubar.setObjectName(u"menubar")
-        self.menubar.setGeometry(QRect(0, 0, 402, 23))
+        self.menubar.setGeometry(QRect(0, 0, 410, 23))
         MainWindow.setMenuBar(self.menubar)
         self.statusbar = QStatusBar(MainWindow)
         self.statusbar.setObjectName(u"statusbar")
@@ -188,15 +198,16 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"MainWindow", None))
-        self.radioRemove.setText(QCoreApplication.translate("MainWindow", u"Remove stubs track", None))
-        self.radioMerg.setText(QCoreApplication.translate("MainWindow", u"Merging collinear tracks", None))
-        self.radioTotal.setText(QCoreApplication.translate("MainWindow", u"Remove stubs track + Merging collinear tracks", None))
-        self.buttonConnect.setText(QCoreApplication.translate("MainWindow", u"Connect to KiCad", None))
-        self.buttonRun.setText(QCoreApplication.translate("MainWindow", u"Run", None))
+        self.buttonClearUnconnected.setText(QCoreApplication.translate("MainWindow", u"Clear Unconnected Tracks", None))
+        self.buttonMergingCollinear.setText(QCoreApplication.translate("MainWindow", u"Merge Collinear Tracks", None))
+        self.buttonClearMerging.setText(QCoreApplication.translate("MainWindow", u"Clear Unconnected Tracks + Merge Collinear Tracks", None))
+        self.buttonTrackJoiner.setText(QCoreApplication.translate("MainWindow", u"Track Joiner", None))
+        self.buttonCenterTrack.setText(QCoreApplication.translate("MainWindow", u"Center Track to Pads", None))
+        self.buttonAlignTrack.setText(QCoreApplication.translate("MainWindow", u"Align Tracks Perpendicular to Pads", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab), QCoreApplication.translate("MainWindow", u"Track Optimizer", None))
         self.radioMil.setText(QCoreApplication.translate("MainWindow", u"mil", None))
         self.radioMM.setText(QCoreApplication.translate("MainWindow", u"mm", None))
-        self.checkFlip.setText(QCoreApplication.translate("MainWindow", u"Flip direction escape length", None))
+        self.checkFlip.setText(QCoreApplication.translate("MainWindow", u"Flip escape direction", None))
         self.label_3.setText(QCoreApplication.translate("MainWindow", u"Escape Length:", None))
         self.label_2.setText(QCoreApplication.translate("MainWindow", u"DP Gap:", None))
         self.label.setText(QCoreApplication.translate("MainWindow", u"DP Width:", None))
@@ -205,5 +216,6 @@ class Ui_MainWindow(object):
         self.buttonBreakout.setText(QCoreApplication.translate("MainWindow", u"Breakout Diff Pair", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2), QCoreApplication.translate("MainWindow", u"Differential Pair", None))
         self.buttonClose.setText(QCoreApplication.translate("MainWindow", u"Close", None))
+        self.buttonConnect.setText(QCoreApplication.translate("MainWindow", u"Connect to KiCad", None))
     # retranslateUi
 

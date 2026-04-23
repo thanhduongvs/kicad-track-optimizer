@@ -279,6 +279,51 @@ class KiCadPCB:
                                 node.is_anchored = True
                                 break
         print("Recursively scanning for stub tracks done")
+        
+        # ==========================================
+        # 3. Pruning Loop: Trim dangling endpoints
+        # ==========================================
+        items_to_remove = []
+        removed_in_pass = True
+        
+        while removed_in_pass:
+            removed_in_pass = False
+            
+            # Iterate through all connection points
+            for key, node in point_map.items():
+                # If the node is not anchored to a Pad/Via AND has exactly 1 track touching it (open end)
+                if not node.is_anchored and len(node.tracks) == 1:
+                    track_id = list(node.tracks)[0]
+                    
+                    # Find the corresponding track object
+                    track_to_delete = next((t for t in tracks if t.id.value == track_id), None)
+                    
+                    if track_to_delete and track_to_delete not in items_to_remove:
+                        items_to_remove.append(track_to_delete)
+                        
+                        # Remove this track from the graph (at both ends) so that connected tracks 
+                        # also become open ends in the next loop (recursive)
+                        for pos in (track_to_delete.start, track_to_delete.end):
+                            end_key = get_key(pos, track_to_delete.layer)
+                            if track_id in point_map[end_key].tracks:
+                                point_map[end_key].tracks.remove(track_id)
+                        
+                        removed_in_pass = True
+
+        # ==========================================
+        # 4. Execute deletion and Push Commit
+        # ==========================================
+        if items_to_remove:
+            commit = self.board.begin_commit()
+            try:
+                self.board.remove_items(items_to_remove)
+                self.board.push_commit(commit, f"Removed {len(items_to_remove)} unconnected track ends")
+                print(f"Success! Removed {len(items_to_remove)} unconnected stubs/arcs.")
+            except Exception as e:
+                self.board.drop_commit(commit)
+                print(f"An error occurred while removing stubs: {e}")
+        else:
+            print("No unconnected tracks found.")
     
     def breakout_diff_pair(self, width_nm=250000, gap_nm=200000, escape_length=2000000, escape_mode="Perpendicular", flip_direction=False) -> int:
         """
@@ -329,7 +374,7 @@ class KiCadPCB:
             py = ux
         else:
             try:
-                # Trích xuất con số từ các chuỗi như "22.5 Degrees", "-45 Degrees"
+                # Extract the number from strings like "22.5 Degrees", "-45 Degrees"
                 angle_str = mode_str.replace("degrees", "").replace("degree", "").strip()
                 angle_deg = float(angle_str)
                 rad = math.radians(angle_deg)
@@ -420,6 +465,190 @@ class KiCadPCB:
             self.board.drop_commit(commit)
             print(f"Error creating tracks: {e}")
             return 0
+
+    def track_join(self) -> str:
+        msg = ''
+        selected_items = self.board.get_selection()
+        selected_tracks = [item for item in selected_items if type(item) is Track]
+        if len(selected_tracks) != 2:
+            msg = "Error: Please select exactly 2 tracks. Currently selected: " + str(len(selected_tracks))
+            print(msg)
+            return msg
+        t1, t2 = selected_tracks[0], selected_tracks[1]
+        intersect = get_line_intersection(t1.start, t1.end, t2.start, t2.end)
+        if not intersect:
+            msg = "The two tracks are parallel and do not intersect"
+            print(msg)
+            return msg
+        
+        # 3. Edit Track 1: Find the endpoint closest to the intersection and snap to it
+        if get_distance(t1.start, intersect) < get_distance(t1.end, intersect):
+            t1.start = intersect
+        else:
+            t1.end = intersect
+
+        # 4. Edit Track 2: Similarly
+        if get_distance(t2.start, intersect) < get_distance(t2.end, intersect):
+            t2.start = intersect
+        else:
+            t2.end = intersect
+
+        # 5. Push changes to GUI
+        #self.board.push_commit(commit)
+        self.board.update_items([t1, t2])
+        
+        print(f"Successfully updated 2 tracks to the intersection point!")
+
+    def center_tracks_to_pads(self):
+        """
+        Automatically detect and center 1 track OR a 2-track pair (diff pair) between 2 pads.
+        """
+        if not self.connected or not self.board:
+            msg = "Error: Not connected to KiCad Board."
+            print(msg)
+            return msg
+
+        selected_items = self.board.get_selection()
+        
+        pads = [item for item in selected_items if type(item) is Pad]
+        tracks = [item for item in selected_items if type(item) is Track]
+
+        if len(pads) != 2 or len(tracks) not in [1, 2]:
+            msg = "Error: Please select exactly 2 Pads and 1 or 2 Tracks."
+            print(msg)
+            return msg
+
+        target_center = Vector2.from_xy(
+            int((pads[0].position.x + pads[1].position.x) / 2),
+            int((pads[0].position.y + pads[1].position.y) / 2)
+        )
+
+        if len(tracks) == 1:
+            track = tracks[0]
+            track_mid = Vector2.from_xy(
+                int((track.start.x + track.end.x) / 2),
+                int((track.start.y + track.end.y) / 2)
+            )
+
+            offset_x = target_center.x - track_mid.x
+            offset_y = target_center.y - track_mid.y
+
+            track.start = Vector2.from_xy(track.start.x + offset_x, track.start.y + offset_y)
+            track.end = Vector2.from_xy(track.end.x + offset_x, track.end.y + offset_y)
+
+            self.board.update_items([track])
+            msg = f"Centered 1 Track! Displacement vector: X={offset_x/1e6:.4f}mm, Y={offset_y/1e6:.4f}mm"
+            print(msg)
+            return msg
+
+        elif len(tracks) == 2:
+            t1, t2 = tracks[0], tracks[1]
+
+            t1_mid = Vector2.from_xy(
+                int((t1.start.x + t1.end.x) / 2),
+                int((t1.start.y + t1.end.y) / 2)
+            )
+            t2_mid = Vector2.from_xy(
+                int((t2.start.x + t2.end.x) / 2),
+                int((t2.start.y + t2.end.y) / 2)
+            )
+            
+            pair_center = Vector2.from_xy(
+                int((t1_mid.x + t2_mid.x) / 2),
+                int((t1_mid.y + t2_mid.y) / 2)
+            )
+
+            offset_x = target_center.x - pair_center.x
+            offset_y = target_center.y - pair_center.y
+
+            for track in tracks:
+                track.start = Vector2.from_xy(track.start.x + offset_x, track.start.y + offset_y)
+                track.end = Vector2.from_xy(track.end.x + offset_x, track.end.y + offset_y)
+
+            self.board.update_items(tracks)
+            msg = f"Centered 2 Tracks! Displacement vector: X={offset_x/1e6:.4f}mm, Y={offset_y/1e6:.4f}mm"
+            print(msg)
+            return msg
+
+    def align_perpendicular_to_pads(self):
+        """
+        Center and rotate the track to be perpendicular to the line connecting 2 pads.
+        Supports both a single track and a 2-track pair (diff pair).
+        """
+        if not self.connected or not self.board:
+            msg = "Error: Not connected to KiCad Board."
+            print(msg)
+            return msg
+
+        selected_items = self.board.get_selection()
+        pads = [item for item in selected_items if type(item) is Pad]
+        tracks = [item for item in selected_items if type(item) is Track]
+
+        if len(pads) != 2 or len(tracks) not in [1, 2]:
+            msg = "Error: Please select exactly 2 Pads and 1 or 2 Tracks."
+            print(msg)
+            return msg
+
+        p1, p2 = pads[0].position, pads[1].position
+        mid_pads = Vector2.from_xy(int((p1.x + p2.x) / 2), int((p1.y + p2.y) / 2))
+        
+        angle_pads = math.atan2(p2.y - p1.y, p2.x - p1.x)
+        target_angle = angle_pads + (math.pi / 2)
+
+        if len(tracks) == 1:
+            self._apply_alignment(tracks[0], mid_pads, target_angle)
+        else:
+            t1_mid = Vector2.from_xy(int((tracks[0].start.x + tracks[0].end.x)/2), int((tracks[0].start.y + tracks[0].end.y)/2))
+            t2_mid = Vector2.from_xy(int((tracks[1].start.x + tracks[1].end.x)/2), int((tracks[1].start.y + tracks[1].end.y)/2))
+            
+            dist_between = math.sqrt((t1_mid.x - t2_mid.x)**2 + (t1_mid.y - t2_mid.y)**2)
+            
+            dx = math.cos(angle_pads) * (dist_between / 2)
+            dy = math.sin(angle_pads) * (dist_between / 2)
+
+            pos1 = Vector2.from_xy(int(mid_pads.x + dx), int(mid_pads.y + dy))
+            pos2 = Vector2.from_xy(int(mid_pads.x - dx), int(mid_pads.y - dy))
+            
+            self._apply_alignment(tracks[0], pos1, target_angle)
+            self._apply_alignment(tracks[1], pos2, target_angle)
+
+        self.board.update_items(tracks)
+        msg = "Successfully aligned perpendicularly."
+        print(msg)
+        return msg
+
+    def _apply_alignment(self, track: Track, center: Vector2, angle: float):
+        """Helper function to rotate a track around a given center by a specified angle"""
+        # Calculate the current length of the track
+        length = math.sqrt((track.start.x - track.end.x)**2 + (track.start.y - track.end.y)**2)
+        
+        # Calculate the displacement from the center to the 2 endpoints based on the new angle
+        half_len_x = (length / 2) * math.cos(angle)
+        half_len_y = (length / 2) * math.sin(angle)
+        
+        track.start = Vector2.from_xy(int(center.x - half_len_x), int(center.y - half_len_y))
+        track.end = Vector2.from_xy(int(center.x + half_len_x), int(center.y + half_len_y))
+
+def get_line_intersection(p1: Vector2, p2: Vector2, p3: Vector2, p4: Vector2):
+    """
+    Calculate the intersection of 2 LINES (infinitely extended).
+    """
+    x1, y1 = p1.x, p1.y
+    x2, y2 = p2.x, p2.y
+    x3, y3 = p3.x, p3.y
+    x4, y4 = p4.x, p4.y
+
+    den = (y4 - y3) * (x2 - x1) - (x4 - x3) * (y2 - y1)
+    if den == 0:
+        return None  # Parallel
+
+    ua = ((x4 - x3) * (y1 - y3) - (y4 - y3) * (x1 - x3)) / den
+    ix = x1 + ua * (x2 - x1)
+    iy = y1 + ua * (y2 - y1)
+    return Vector2.from_xy(int(ix), int(iy))
+
+def get_distance(p1: Vector2, p2: Vector2):
+    return math.sqrt((p1.x - p2.x)**2 + (p1.y - p2.y)**2)
 
 def natural_sort_key(footprint: FootprintInstance):
     text = footprint.reference_field.text.value
