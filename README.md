@@ -9,10 +9,10 @@ When modifying dense layouts, it is easy to leave behind microscopic unconnected
 <table>
   <tr>
     <td width="33%" align="center" valign="top">
-      <img src="./images/gui1.png" alt="SOM RZ/V2L" width="100%" />
+      <img src="./images/gui1.png" alt="Track Optimizer" width="100%" />
     </td>
     <td width="33%" align="center" valign="top">
-      <img src="./images/gui2.png" alt="SOM RZ/V2H" width="100%" />
+      <img src="./images/gui2.png" alt="Differential Pair" width="100%" />
     </td>
   </tr>
 </table>
@@ -66,9 +66,9 @@ Add our custom repo to **the Plugin and Content Manager**, the URL is:
 ### Manual Installation
 - Download the plugin source code as **a .zip** file.
 - Locate your KiCad plugins folder:
-  - **Windows:** `Documents\KiCad\10.0\plugins` (or `9.0\plugins`)
-  - **Linux:** `~/.local/share/kicad/10.0/plugins` (or `9.0/plugins`)
-  - **macOS:** `~/Documents/KiCad/10.0/plugins` (or `9.0/plugins`)
+  - **Windows:** `Documents\KiCad\10.0\plugins`
+  - **Linux:** `~/.local/share/kicad/10.0/plugins`
+  - **macOS:** `~/Documents/KiCad/10.0/plugins`
 - Extract the archive to the KiCad plugins directory.
 - Restart KiCad / PCB Editor.
 
