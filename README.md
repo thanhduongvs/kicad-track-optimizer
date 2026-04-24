@@ -8,10 +8,10 @@ When modifying dense layouts, it is easy to leave behind microscopic unconnected
 
 <table>
   <tr>
-    <td width="33%" align="center" valign="top">
+    <td width="50%" align="center" valign="top">
       <img src="./images/gui1.png" alt="Track Optimizer" width="100%" />
     </td>
-    <td width="33%" align="center" valign="top">
+    <td width="50%" align="center" valign="top">
       <img src="./images/gui2.png" alt="Differential Pair" width="100%" />
     </td>
   </tr>
